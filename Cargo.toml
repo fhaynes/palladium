@@ -1,0 +1,6 @@
+[package]
+name = "osmium"
+version = "0.0.1"
+authors = ["Fletcher Haynes <fletcher@subnetzero.io>"]
+
+[dependencies]
