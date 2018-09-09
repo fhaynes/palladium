@@ -2,5 +2,9 @@
 name = "osmium"
 version = "0.0.1"
 authors = ["Fletcher Haynes <fletcher@subnetzero.io>"]
+description = "A high level, dynamic language written for the Iridium VM."
+license = "MIT"
+homepage = "https://blog.subnetzero.io"
+repository = "https://gitlab.com/subnetzero/osmium"
 
 [dependencies]
