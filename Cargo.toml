@@ -8,3 +8,4 @@ homepage = "https://blog.subnetzero.io"
 repository = "https://gitlab.com/subnetzero/palladium"
 
 [dependencies]
+nom = "^4.0"
