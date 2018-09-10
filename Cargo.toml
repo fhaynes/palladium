@@ -1,6 +1,6 @@
 [package]
 name = "palladium"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Fletcher Haynes <fletcher@subnetzero.io>"]
 description = "A high level, dynamic language written for the Iridium VM."
 license = "MIT"
