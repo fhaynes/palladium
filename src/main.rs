@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate nom;
+extern crate iridium;
 
 mod tokens;
 mod operator_parsers;

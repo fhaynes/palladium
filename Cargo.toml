@@ -9,3 +9,4 @@ repository = "https://gitlab.com/subnetzero/palladium"
 
 [dependencies]
 nom = "^4.0"
+iridium = "0.0.19"
