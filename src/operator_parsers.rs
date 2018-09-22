@@ -2,63 +2,29 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 
-/// Parses the "+" operator
-named!(addition_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("+") >>
-            (
-                Token::AdditionOperator
-            )
-        )
-    )
-);
-
-/// Parses the "-" operator
-named!(subtraction_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("-") >>
-            (
-                Token::SubtractionOperator
-            )
-        )
-    )
-);
-
-/// Parses the "*" operator
-named!(multiplication_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("*") >>
-            (
-                Token::MultiplicationOperator
-            )
-        )
-    )
-);
-
-/// Parses the "/" operator
-named!(division_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("/") >>
-            (
-                Token::DivisionOperator
-            )
-        )
-    )
-);
-
 /// Looks for any of the operands
 named!(pub operator<CompleteStr, Token>,
     ws!(
-        alt!(
-            addition_operator |
-            subtraction_operator |
-            multiplication_operator |
-            division_operator
+        do_parse!(
+            token: alt!(
+                tag!("+") |
+                tag!("-") |
+                tag!("*") |
+                tag!("/") 
+        ) >>
+        (
+            {
+                match token {
+                    CompleteStr("+") => Token::AdditionOperator,
+                    CompleteStr("-") => Token::SubtractionOperator,
+                    CompleteStr("*") => Token::MultiplicationOperator,
+                    CompleteStr("/") => Token::DivisionOperator,
+                    CompleteStr(&_) => {unreachable!()},
+                }
+            }
         )
+        )
+
     )
 );
 
@@ -69,7 +35,7 @@ mod tests {
 
     #[test]
     fn test_parse_addition_operator() {
-        let result = addition_operator(CompleteStr("+"));
+        let result = operator(CompleteStr("+"));
         assert_eq!(result.is_ok(), true);
         let (_, token) = result.unwrap();
         assert_eq!(token, Token::AdditionOperator);
@@ -77,7 +43,7 @@ mod tests {
 
     #[test]
     fn test_parse_subtraction_operator() {
-        let result = subtraction_operator(CompleteStr("-"));
+        let result = operator(CompleteStr("-"));
         assert_eq!(result.is_ok(), true);
         let (_, token) = result.unwrap();
         assert_eq!(token, Token::SubtractionOperator);
@@ -85,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_parse_multiplication_operator() {
-        let result = multiplication_operator(CompleteStr("*"));
+        let result = operator(CompleteStr("*"));
         assert_eq!(result.is_ok(), true);
         let (_, token) = result.unwrap();
         assert_eq!(token, Token::MultiplicationOperator);
@@ -93,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_parse_division_operator() {
-        let result = division_operator(CompleteStr("/"));
+        let result = operator(CompleteStr("/"));
         assert_eq!(result.is_ok(), true);
         let (_, token) = result.unwrap();
         assert_eq!(token, Token::DivisionOperator);
