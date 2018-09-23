@@ -1,6 +1,6 @@
 [package]
 name = "palladium"
-version = "0.0.2"
+version = "0.0.25"
 authors = ["Fletcher Haynes <fletcher@subnetzero.io>"]
 description = "A high level, dynamic language written for the Iridium VM."
 license = "MIT"
@@ -9,4 +9,4 @@ repository = "https://gitlab.com/subnetzero/palladium"
 
 [dependencies]
 nom = "^4.0"
-iridium = "0.0.19"
+iridium = "0.0.24"
