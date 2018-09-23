@@ -1,22 +1,41 @@
 use nom::types::CompleteStr;
 
 use tokens::Token;
-use operand_parsers::operand;
-use operator_parsers::operator;
+use term_parsers::term;
+use operator_parsers::*;
 
-named!(pub expression<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            left: operand >>
-            op: operator >>
-            right: operand >>
-            (
-                Token::Expression{
-                    left: Box::new(left),
-                    right: Box::new(right),
-                    op: Box::new(op)
-                }
+named!(pub expression<CompleteStr,Token>,
+    do_parse!(
+        left: term >>
+        right: many0!(
+            tuple!(
+                alt!(
+                    addition_operator |
+                    subtraction_operator
+                ),
+                term
             )
+        ) >>
+        (
+            {
+                Token::Expression{left: Box::new(left), right: right}
+            }
         )
     )
 );
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_expression() {
+        let result = expression(CompleteStr("3*4"));
+        assert_eq!(result.is_ok(), true);
+    }
+
+    #[test]
+    fn test_parse_nested_expression() {
+        let result = expression(CompleteStr("(3*4)+1"));
+        assert_eq!(result.is_ok(), true);
+    }
+}

@@ -33,11 +33,34 @@ impl Compiler {
         let bytecode = self.assembler.assemble(&program);
         match bytecode {
             Ok(b) => { b },
-            Err(e) => { vec![] }
+            Err(_e) => { vec![] }
+        }
+    }
+
+    pub fn print_asm(&self) {
+        for line in &self.assembly {
+            println!("{:#?}", line);
+        }
+    }
+
+    pub fn print_used_registers(&self) {
+        println!("--------------------");
+        println!("|  Used Registers  |");
+        println!("--------------------");
+        for r in &self.used_registers {
+            println!("{:#?}", r);
+        }
+    }
+
+    pub fn print_free_registers(&self) {
+        println!("--------------------");
+        println!("|  Free Registers  |");
+        println!("--------------------");
+        for r in &self.free_registers {
+            println!("{:#?}", r);
         }
     }
 }
-
 
 impl Visitor for Compiler {
     fn visit_token(&mut self, node: &Token) {
@@ -49,27 +72,30 @@ impl Visitor for Compiler {
                 let right_register = self.used_registers.pop().unwrap();
                 let line = format!("ADD ${} ${} ${}", left_register, right_register, result_register);
                 self.assembly.push(line);
+                self.used_registers.push(result_register);
                 self.free_registers.push(left_register);
                 self.free_registers.push(right_register);
-
             },
             &Token::SubtractionOperator => {
                 // TODO: Need to clean this up. Remove the unwraps.
                 let result_register = self.free_registers.pop().unwrap();
                 let left_register = self.used_registers.pop().unwrap();
                 let right_register = self.used_registers.pop().unwrap();
-                let line = format!("SUB ${} ${} ${}", left_register, right_register, result_register);
+                let line = format!("SUB ${} ${} ${}", right_register, left_register, result_register);
                 self.assembly.push(line);
+                self.used_registers.push(result_register);
                 self.free_registers.push(left_register);
                 self.free_registers.push(right_register);
             },
             &Token::MultiplicationOperator => {
                 // TODO: Need to clean this up. Remove the unwraps.
+
                 let result_register = self.free_registers.pop().unwrap();
                 let left_register = self.used_registers.pop().unwrap();
                 let right_register = self.used_registers.pop().unwrap();
                 let line = format!("MUL ${} ${} ${}", left_register, right_register, result_register);
                 self.assembly.push(line);
+                self.used_registers.push(result_register);
                 self.free_registers.push(left_register);
                 self.free_registers.push(right_register);
             },
@@ -80,6 +106,7 @@ impl Visitor for Compiler {
                 let right_register = self.used_registers.pop().unwrap();
                 let line = format!("DIV ${} ${} ${}", left_register, right_register, result_register);
                 self.assembly.push(line);
+                self.used_registers.push(result_register);
                 self.free_registers.push(left_register);
                 self.free_registers.push(right_register);
             },
@@ -89,10 +116,29 @@ impl Visitor for Compiler {
                 self.used_registers.push(next_register);
                 self.assembly.push(line);
             },
-            &Token::Expression{ ref left, ref op, ref right } => {
+            &Token::Float{ value } => {
+                let next_register = self.free_registers.pop().unwrap();
+                let line = format!("LOAD ${} #{}", next_register, value);
+                self.used_registers.push(next_register);
+                self.assembly.push(line);
+            },
+            &Token::Factor{ ref value } => {
+                self.visit_token(value);
+            },
+            &Token::Term{ ref left, ref right } => {
                 self.visit_token(left);
-                self.visit_token(right);
-                self.visit_token(op);
+                for factor in right {
+                    self.visit_token(&factor.1);
+                    self.visit_token(&factor.0);
+                }
+            },
+            &Token::Expression{ ref left, ref right } => {
+                self.visit_token(left);
+                for term in right {
+                    self.visit_token(&term.1);
+                    self.visit_token(&term.0);
+                }
+
             },
             &Token::Program{ ref expressions } => {
                 self.assembly.push(".data".into());
@@ -100,7 +146,7 @@ impl Visitor for Compiler {
                 for expression in expressions {
                     self.visit_token(expression);
                 }
-            }
+            },
         }
     }
 }
@@ -136,6 +182,13 @@ mod tests {
         let test_program = generate_test_program("2*1");
         compiler.visit_token(&test_program);
         let bytecode = compiler.compile();
-        println!("{:#?}", bytecode);
+    }
+
+    #[test]
+    fn test_nested_operators() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("(4*3)-1");
+        compiler.visit_token(&test_program);
+        let bytecode = compiler.compile();
     }
 }

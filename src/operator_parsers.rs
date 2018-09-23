@@ -3,7 +3,7 @@ use nom::types::CompleteStr;
 use tokens::Token;
 
 /// Parses the "+" operator
-named!(addition_operator<CompleteStr, Token>,
+named!(pub addition_operator<CompleteStr, Token>,
     ws!(
         do_parse!(
             tag!("+") >>
@@ -15,7 +15,7 @@ named!(addition_operator<CompleteStr, Token>,
 );
 
 /// Parses the "-" operator
-named!(subtraction_operator<CompleteStr, Token>,
+named!(pub subtraction_operator<CompleteStr, Token>,
     ws!(
         do_parse!(
             tag!("-") >>
@@ -27,7 +27,7 @@ named!(subtraction_operator<CompleteStr, Token>,
 );
 
 /// Parses the "*" operator
-named!(multiplication_operator<CompleteStr, Token>,
+named!(pub multiplication_operator<CompleteStr, Token>,
     ws!(
         do_parse!(
             tag!("*") >>
@@ -39,7 +39,7 @@ named!(multiplication_operator<CompleteStr, Token>,
 );
 
 /// Parses the "/" operator
-named!(division_operator<CompleteStr, Token>,
+named!(pub division_operator<CompleteStr, Token>,
     ws!(
         do_parse!(
             tag!("/") >>

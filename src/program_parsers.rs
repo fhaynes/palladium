@@ -23,7 +23,12 @@ mod tests {
         let test_program = CompleteStr("1+2");
         let result = program(test_program);
         assert_eq!(result.is_ok(), true);
-        let (_, tree) = result.unwrap();
-        // TODO: More testws here on the tree
+    }
+
+    #[test]
+    fn test_parse_nested_program() {
+        let test_program = CompleteStr("(1+2)*3");
+        let result = program(test_program);
+        assert_eq!(result.is_ok(), true);
     }
 }
