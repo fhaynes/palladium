@@ -2,37 +2,8 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 
-<<<<<<< HEAD
-/// Parses the "+" operator
-named!(pub addition_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("+") >>
-            (
-                Token::AdditionOperator
-            )
-        )
-    )
-);
-
-/// Parses the "-" operator
-named!(pub subtraction_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("-") >>
-            (
-                Token::SubtractionOperator
-            )
-        )
-    )
-);
-
-/// Parses the "*" operator
-named!(pub multiplication_operator<CompleteStr, Token>,
-=======
 /// Looks for any of the operands
 named!(pub operator<CompleteStr, Token>,
->>>>>>> yjhmelody/palladium-master
     ws!(
         do_parse!(
             token: alt!(
@@ -52,20 +23,6 @@ named!(pub operator<CompleteStr, Token>,
                 }
             }
         )
-<<<<<<< HEAD
-    )
-);
-
-/// Parses the "/" operator
-named!(pub division_operator<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            tag!("/") >>
-            (
-                Token::DivisionOperator
-            )
-=======
->>>>>>> yjhmelody/palladium-master
         )
 
     )
