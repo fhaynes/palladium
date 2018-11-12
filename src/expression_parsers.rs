@@ -2,7 +2,7 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 use term_parsers::term;
-use operator_parsers::*;
+use operator_parsers::operator;
 
 named!(pub expression<CompleteStr,Token>,
     do_parse!(
@@ -10,8 +10,7 @@ named!(pub expression<CompleteStr,Token>,
         right: many0!(
             tuple!(
                 alt!(
-                    addition_operator |
-                    subtraction_operator
+                    operator
                 ),
                 term
             )

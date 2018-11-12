@@ -2,7 +2,7 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 use factor_parsers::factor;
-use operator_parsers::{multiplication_operator, division_operator};
+use operator_parsers::operator;
 
 named!(pub term<CompleteStr,Token>,
     do_parse!(
@@ -10,8 +10,7 @@ named!(pub term<CompleteStr,Token>,
         right: many0!(
             tuple!(
                 alt!(
-                    multiplication_operator |
-                    division_operator
+                    operator
                 ),
                 factor
             )
