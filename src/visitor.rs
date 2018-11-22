@@ -132,6 +132,18 @@ impl Visitor for Compiler {
                     self.visit_token(&factor.0);
                 }
             },
+            &Token::FunctionName{ ref name } => {
+
+            },
+            &Token::FunctionArgs{ ref args } => {
+
+            },
+            &Token::FunctionBody{ ref expressions } => {
+
+            },
+            &Token::Function{ ref name, ref args, ref body } => {
+
+            },
             &Token::Expression{ ref left, ref right } => {
                 self.visit_token(left);
                 for term in right {

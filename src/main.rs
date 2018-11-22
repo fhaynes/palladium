@@ -1,3 +1,4 @@
+#![allow(unused)]
 #[macro_use]
 extern crate nom;
 extern crate iridium;
@@ -9,6 +10,7 @@ mod program_parsers;
 mod visitor;
 mod factor_parsers;
 mod term_parsers;
+mod function_parsers;
 
 fn main() {
     
