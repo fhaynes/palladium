@@ -110,6 +110,12 @@ impl Visitor for Compiler {
                 self.free_registers.push(left_register);
                 self.free_registers.push(right_register);
             },
+            &Token::GreaterThan => {
+
+            },
+            &Token::LessThan => {
+
+            },
             &Token::Integer{ value } => {
                 let next_register = self.free_registers.pop().unwrap();
                 let line = format!("LOAD ${} #{}", next_register, value);
@@ -121,6 +127,9 @@ impl Visitor for Compiler {
                 let line = format!("LOAD ${} #{}", next_register, value);
                 self.used_registers.push(next_register);
                 self.assembly.push(line);
+            },
+            &Token::Identifier{ ref value } => {
+
             },
             &Token::Factor{ ref value } => {
                 self.visit_token(value);
@@ -144,6 +153,24 @@ impl Visitor for Compiler {
             &Token::Function{ ref name, ref args, ref body } => {
 
             },
+            &Token::ForLoop{ ref start, ref body } => {
+
+            },
+            &Token::ForLoopStart{ ref variable_name, ref collection_name } => {
+
+            },
+            &Token::ForLoopBody{ ref expressions } => {
+
+            },
+            &Token::WhileLoop{ ref start, ref body } => {
+
+            },
+            &Token::WhileLoopStart{ ref expression } => {
+
+            },
+            &Token::WhileLoopBody{ ref expressions } => {
+
+            },
             &Token::Expression{ ref left, ref right } => {
                 self.visit_token(left);
                 for term in right {
@@ -158,7 +185,7 @@ impl Visitor for Compiler {
                 for expression in expressions {
                     self.visit_token(expression);
                 }
-            },
+            }
         }
     }
 }

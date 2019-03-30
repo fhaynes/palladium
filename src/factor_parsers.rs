@@ -48,12 +48,26 @@ named!(integer<CompleteStr, Token>,
     )
 );
 
+named!(identifier<CompleteStr, Token>,
+    ws!(
+        do_parse!(
+            id: alpha >>
+            (
+                {
+                    Token::Factor{ value: Box::new(Token::Identifier{ value: id.to_string() })}
+                }
+            )
+        )
+    )
+);
+
 named!(pub factor<CompleteStr, Token>,
     ws!(
         do_parse!(
             f: alt!(
                 integer |
                 float64 |
+                identifier |
                 ws!(delimited!( tag_s!("("), expression, tag_s!(")") ))
             ) >>
             (
@@ -94,5 +108,11 @@ mod tests {
             let result = integer(CompleteStr(o));
             assert_eq!(result.is_ok(), true);
         }
+    }
+
+    #[test]
+    fn test_parse_identifier() {
+        let result = identifier(CompleteStr("x"));
+        assert!(result.is_ok());
     }
 }
