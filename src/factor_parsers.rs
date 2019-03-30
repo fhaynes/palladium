@@ -1,9 +1,18 @@
+//! Contains parsers for `Factors`
 use nom::*;
 use nom::types::CompleteStr;
 
 use tokens::Token;
 use expression_parsers::expression;
 
+/// Parser for a 64-bit float. A float can be negative, and must contain a `.`.
+/// 
+/// # Example
+/// 
+/// ```
+/// x = 4.5
+/// y = -4.5
+/// ```
 named!(float64<CompleteStr, Token>,
     ws!(
         do_parse!(
@@ -28,6 +37,14 @@ named!(float64<CompleteStr, Token>,
     )
 );
 
+/// Parser for a signed 64-bit integer.
+/// 
+/// # Example
+/// 
+/// ```
+/// x = 4
+/// y = -4
+/// ```
 named!(integer<CompleteStr, Token>,
     ws!(
         do_parse!(
@@ -48,6 +65,15 @@ named!(integer<CompleteStr, Token>,
     )
 );
 
+/// Parse for a variable identifier
+/// 
+/// # Example
+/// 
+/// ```
+/// x
+/// ````
+/// 
+/// An Identifier can consist only of letters and are case-sensitive.
 named!(identifier<CompleteStr, Token>,
     ws!(
         do_parse!(
@@ -61,6 +87,15 @@ named!(identifier<CompleteStr, Token>,
     )
 );
 
+/// Parser for a `Factor`. A Factor consists of an integer, float, identifier,
+/// or a parenthized expression
+/// 
+/// # Example
+/// 
+/// ```
+/// (1+2)
+/// ```
+/// 
 named!(pub factor<CompleteStr, Token>,
     ws!(
         do_parse!(
@@ -87,7 +122,6 @@ mod tests {
         let result = factor(test_program);
         assert_eq!(result.is_ok(), true);
         let (_, tree) = result.unwrap();
-        println!("{:#?}", tree);
     }
 
     #[test]

@@ -1,10 +1,16 @@
+//! Contains parsers related to parsing Expressions
 use nom::types::CompleteStr;
 
 use tokens::Token;
 use term_parsers::term;
 use operator_parsers::operator;
 
-named!(pub expression<CompleteStr,Token>,
+/// Parses a complete expression
+/// 
+/// # Expressions
+/// 
+/// An expression consists of a `Term` and an `Operator` and `Term` on the right side.
+named!(pub expression<CompleteStr, Token>,
     do_parse!(
         left: term >>
         right: many0!(

@@ -1,8 +1,11 @@
+//! Parsers related to `Operators`
+//! 
 use nom::types::CompleteStr;
 
 use tokens::Token;
 
-/// Looks for any of the operands
+/// Looks for any of the operators and returns a Token
+/// for the appropriate one
 named!(pub operator<CompleteStr, Token>,
     ws!(
         do_parse!(
@@ -12,7 +15,9 @@ named!(pub operator<CompleteStr, Token>,
                 tag!("*") |
                 tag!("/") |
                 tag!(">") |
-                tag!("<")
+                tag!("<") |
+                tag!("<=") |
+                tag!(">=")
         ) >>
         (
             {
@@ -23,7 +28,9 @@ named!(pub operator<CompleteStr, Token>,
                     CompleteStr("/") => Token::DivisionOperator,
                     CompleteStr(">") => Token::GreaterThan,
                     CompleteStr("<") => Token::LessThan,
-                    CompleteStr(&_) => {unreachable!()},
+                    CompleteStr(">=") => Token::GreaterThanOrEqual,
+                    CompleteStr("<=") => Token::LessThanOrEqual,
+                    CompleteStr(&_) => { unreachable!() },
                 }
             }
         )
@@ -71,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_parse_operator() {
-        let operators = vec!["+", "*", "-", "/", ">", "<"];
+        let operators = vec!["+", "*", "-", "/", ">", "<", "<=", ">="];
         for o in operators {
             let result = operator(CompleteStr(o));
             assert_eq!(result.is_ok(), true);

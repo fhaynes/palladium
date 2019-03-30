@@ -1,8 +1,11 @@
+//! Contains the parser for an entire program. This is the
+//! topmost level parser
 use nom::types::CompleteStr;
 
 use expression_parsers::*;
 use tokens::Token;
 
+/// Parses an entire program, which is just a collection of expressions
 named!(pub program<CompleteStr, Token>,
     ws!(
         do_parse!(

@@ -1,19 +1,34 @@
+//! Contains the `Compiler` and `Visitor` trait. These are used to compile
+//! a Palladium program to assembler code for the `Iridium` VM.
+
 use iridium::assembler::Assembler;
 use tokens::Token;
 
 pub trait Visitor {
+    /// This function is called for ever Token in the AST
     fn visit_token(&mut self, node: &Token);
+    /// Convenience function to write out the assembly for creating a stack frame
+    fn create_stack_frame(&mut self);
 }
 
 #[derive(Default)]
-pub struct Compiler{
+/// Compiles the code into assembly. Also contains an Assembler so it can just
+/// write out bytecode. It also handles register allocation.
+pub struct Compiler {
+    /// Unused Registers
     free_registers: Vec<u8>,
+    /// Used Registers
     used_registers: Vec<u8>,
+    /// The assembly statements created so far. These are just Strings that are
+    /// emitted by the `Compiler` as it walks the tree
     assembly: Vec<String>,
+    /// An `Assembler` for the Iridium VM, so the `Compiler` can emit bytecode
+    /// directly
     assembler: Assembler,
 }
 
 impl Compiler {
+    /// Creates and returns a new `Compiler`
     pub fn new() -> Compiler {
         let mut free_registers = vec![];
         for i in 0..31 {
@@ -28,6 +43,7 @@ impl Compiler {
         }
     }
 
+    /// Takes a 
     pub fn compile(&mut self) -> Vec<u8> {
         let program = self.assembly.join("\n");
         let bytecode = self.assembler.assemble(&program);
@@ -89,7 +105,6 @@ impl Visitor for Compiler {
             },
             &Token::MultiplicationOperator => {
                 // TODO: Need to clean this up. Remove the unwraps.
-
                 let result_register = self.free_registers.pop().unwrap();
                 let left_register = self.used_registers.pop().unwrap();
                 let right_register = self.used_registers.pop().unwrap();
@@ -114,6 +129,12 @@ impl Visitor for Compiler {
 
             },
             &Token::LessThan => {
+
+            },
+            &Token::GreaterThanOrEqual => {
+
+            },
+            &Token::LessThanOrEqual => {
 
             },
             &Token::Integer{ value } => {
@@ -187,6 +208,10 @@ impl Visitor for Compiler {
                 }
             }
         }
+    }
+
+    fn create_stack_frame(&mut self) {
+        unimplemented!()
     }
 }
 

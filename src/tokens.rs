@@ -6,6 +6,8 @@ pub enum Token {
     DivisionOperator,
     GreaterThan,
     LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
     Integer{ value: i64 },
     Float{ value: f64},
     Identifier{ value: String },

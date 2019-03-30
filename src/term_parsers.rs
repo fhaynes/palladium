@@ -1,9 +1,19 @@
+//! Contains parsers related to `Terms`
 use nom::types::CompleteStr;
 
 use tokens::Token;
 use factor_parsers::factor;
 use operator_parsers::operator;
 
+/// Looks for `Terms`. A `Term` consists of a `Factor` on the left,
+/// and then an `Operator` and `Factor` on the right.
+/// 
+/// # Example
+/// 
+/// ```
+/// (3*4)*2
+/// ```
+/// 
 named!(pub term<CompleteStr,Token>,
     do_parse!(
         left: factor >>

@@ -27,7 +27,8 @@ named!(pub function_name<CompleteStr, Token>,
     )
 );
 
-/// Function to look for an individual arg. So in `def func(x, y, z)` it is meant to look for x, y and z
+/// Function to look for an individual arg. 
+/// In `def func(x, y, z)` it is meant to look for x, y and z
 named!(function_arg<CompleteStr, String>,
     ws!(
         do_parse!(
@@ -76,7 +77,7 @@ named!(pub function_body<CompleteStr, Token>,
 );
 
 /// Top level function that uses all of the previously defined functions
-/// to parse out a complete function_parsers
+/// to parse out a complete function
 named!(pub function<CompleteStr, Token>,
     ws!(
         do_parse!(
