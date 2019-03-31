@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn test_parse_expression() {
-        let result = expression(CompleteStr("3*4"));
+        let result = expression(CompleteStr("3>4"));
         assert_eq!(result.is_ok(), true);
     }
 

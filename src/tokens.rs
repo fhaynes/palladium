@@ -8,6 +8,8 @@ pub enum Token {
     LessThan,
     GreaterThanOrEqual,
     LessThanOrEqual,
+    EqualTo,
+    Assignment,
     Integer{ value: i64 },
     Float{ value: f64},
     Identifier{ value: String },

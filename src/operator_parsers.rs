@@ -10,14 +10,16 @@ named!(pub operator<CompleteStr, Token>,
     ws!(
         do_parse!(
             token: alt!(
+                tag!("<=") |
+                tag!(">=") |
+                tag!("==") |
                 tag!("+") |
                 tag!("-") |
                 tag!("*") |
                 tag!("/") |
                 tag!(">") |
                 tag!("<") |
-                tag!("<=") |
-                tag!(">=")
+                tag!("=")
         ) >>
         (
             {
@@ -30,6 +32,8 @@ named!(pub operator<CompleteStr, Token>,
                     CompleteStr("<") => Token::LessThan,
                     CompleteStr(">=") => Token::GreaterThanOrEqual,
                     CompleteStr("<=") => Token::LessThanOrEqual,
+                    CompleteStr("==") => Token::EqualTo,
+                    CompleteStr("=") => Token::Assignment,
                     CompleteStr(&_) => { unreachable!() },
                 }
             }

@@ -126,15 +126,56 @@ impl Visitor for Compiler {
                 self.free_registers.push(right_register);
             },
             &Token::GreaterThan => {
-
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("GT ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
             },
             &Token::LessThan => {
-
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("LT ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
             },
             &Token::GreaterThanOrEqual => {
-
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("GTE ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
             },
             &Token::LessThanOrEqual => {
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("LTE ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
+            },
+            &Token::EqualTo => {
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("EQ ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
+            },
+            &Token::Assignment => {
 
             },
             &Token::Integer{ value } => {
@@ -198,7 +239,6 @@ impl Visitor for Compiler {
                     self.visit_token(&term.1);
                     self.visit_token(&term.0);
                 }
-
             },
             &Token::Program{ ref expressions } => {
                 self.assembly.push(".data".into());
@@ -244,6 +284,47 @@ mod tests {
     fn test_visit_multiplication_token() {
         let mut compiler = Compiler::new();
         let test_program = generate_test_program("2*1");
+        compiler.visit_token(&test_program);
+        let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_visit_division_token() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("2/1");
+        compiler.visit_token(&test_program);
+        let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_visit_greater_than_token() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("2>1");
+        compiler.visit_token(&test_program);
+        let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_visit_less_than_token() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("2<1");
+        compiler.visit_token(&test_program);
+        let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_visit_less_than_or_equal_token() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("2<=1");
+        compiler.visit_token(&test_program);
+        println!("{:?}", compiler.assembly);
+        let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_visit_greater_than_or_equal_token() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("2>=1");
         compiler.visit_token(&test_program);
         let bytecode = compiler.compile();
     }
