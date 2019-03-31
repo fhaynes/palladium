@@ -10,6 +10,9 @@ named!(pub operator<CompleteStr, Token>,
     ws!(
         do_parse!(
             token: alt!(
+                tag!("not") |
+                tag!("or") |
+                tag!("and") |
                 tag!("<=") |
                 tag!(">=") |
                 tag!("==") |
@@ -24,6 +27,8 @@ named!(pub operator<CompleteStr, Token>,
         (
             {
                 match token {
+                    CompleteStr("or") => Token::LogicalOr,
+                    CompleteStr("and") => Token::LogicalAnd,
                     CompleteStr("+") => Token::AdditionOperator,
                     CompleteStr("-") => Token::SubtractionOperator,
                     CompleteStr("*") => Token::MultiplicationOperator,

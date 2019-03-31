@@ -175,6 +175,15 @@ impl Visitor for Compiler {
                 self.free_registers.push(left_register);
                 self.free_registers.push(right_register);
             },
+            &Token::LogicalAnd => {
+
+            },
+            &Token::LogicalNot => {
+
+            },
+            &Token::LogicalOr => {
+
+            },
             &Token::Assignment => {
 
             },
@@ -191,6 +200,15 @@ impl Visitor for Compiler {
                 self.assembly.push(line);
             },
             &Token::Identifier{ ref value } => {
+
+            },
+            &Token::If{ ref expr, ref body} => {
+
+            },
+            &Token::Elif{ ref expr, ref body} => {
+
+            },
+            &Token::Else{ ref body } => {
 
             },
             &Token::Factor{ ref value } => {
