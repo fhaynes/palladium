@@ -1,8 +1,9 @@
 //! Contains the `Compiler` and `Visitor` trait. These are used to compile
 //! a Palladium program to assembler code for the `Iridium` VM.
-
+use std::collections::HashMap;
 use iridium::assembler::Assembler;
 use tokens::Token;
+use scope::Scope;
 
 pub trait Visitor {
     /// This function is called for ever Token in the AST
@@ -25,6 +26,9 @@ pub struct Compiler {
     /// An `Assembler` for the Iridium VM, so the `Compiler` can emit bytecode
     /// directly
     assembler: Assembler,
+    variables: HashMap<String, String>,
+    scopes: Vec<Scope>,
+    scope_pointer: usize
 }
 
 impl Compiler {
@@ -39,7 +43,10 @@ impl Compiler {
             free_registers: free_registers,
             used_registers: vec![],
             assembly: vec![],
-            assembler: Assembler::new()
+            assembler: Assembler::new(),
+            variables: HashMap::new(),
+            scopes: vec![Scope::new()],
+            scope_pointer: 0
         }
     }
 
@@ -176,16 +183,40 @@ impl Visitor for Compiler {
                 self.free_registers.push(right_register);
             },
             &Token::LogicalAnd => {
-
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("AND ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
             },
             &Token::LogicalNot => {
-
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let line = format!("NOT ${} ${}", left_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
             },
             &Token::LogicalOr => {
-
+                let result_register = self.free_registers.pop().unwrap();
+                let left_register = self.used_registers.pop().unwrap();
+                let right_register = self.used_registers.pop().unwrap();
+                let line = format!("OR ${} ${} ${}", left_register, right_register, result_register);
+                self.assembly.push(line);
+                self.used_registers.push(result_register);
+                self.free_registers.push(left_register);
+                self.free_registers.push(right_register);
             },
             &Token::Assignment => {
-
+                let right_register = self.used_registers.pop().unwrap();
+                let variable_register = self.used_registers.pop().unwrap();
+                let line = format!("LOAD ${} ${}", right_register, variable_register);
+                self.assembly.push(line);
+                self.used_registers.push(variable_register);
+                self.free_registers.push(right_register);
             },
             &Token::Integer{ value } => {
                 let next_register = self.free_registers.pop().unwrap();
@@ -200,7 +231,10 @@ impl Visitor for Compiler {
                 self.assembly.push(line);
             },
             &Token::Identifier{ ref value } => {
-
+                let current_scope = &self.scopes[self.scope_pointer];
+                let save_register = self.free_registers.pop().unwrap();
+                self.variables.insert(value.to_string(), save_register.to_string());
+                self.used_registers.push(save_register);
             },
             &Token::If{ ref expr, ref body} => {
 
@@ -231,7 +265,8 @@ impl Visitor for Compiler {
 
             },
             &Token::Function{ ref name, ref args, ref body } => {
-
+                let mut line = format!("{}:", Box::new(name));
+                self.assembly.push(line);
             },
             &Token::ForLoop{ ref start, ref body } => {
 
@@ -280,7 +315,8 @@ mod tests {
 
     fn generate_test_program(expr: &str) -> Token {
         let source = CompleteStr(expr);
-        let (_, tree) = program(source).unwrap();
+        let result = program(source);
+        let (_, tree) = result.unwrap();
         tree
     }
 
@@ -335,7 +371,6 @@ mod tests {
         let mut compiler = Compiler::new();
         let test_program = generate_test_program("2<=1");
         compiler.visit_token(&test_program);
-        println!("{:?}", compiler.assembly);
         let bytecode = compiler.compile();
     }
 
@@ -353,5 +388,21 @@ mod tests {
         let test_program = generate_test_program("(4*3)-1");
         compiler.visit_token(&test_program);
         let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_variable_assignment() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("x = 4");
+        compiler.visit_token(&test_program);
+        let bytecode = compiler.compile();
+    }
+
+    #[test]
+    fn test_function_declaration() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("def testfunc():\n3+4\n");
+        compiler.visit_token(&test_program);
+        println!("{:?}", compiler.assembly);
     }
 }

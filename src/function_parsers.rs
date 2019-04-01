@@ -28,7 +28,7 @@ named!(pub function_name<CompleteStr, Token>,
 );
 
 /// Function to look for an individual arg. 
-/// In `def func(x, y, z)` it is meant to look for x, y and z
+/// In `def func(x, y, z):` it is meant to look for x, y and z
 named!(function_arg<CompleteStr, String>,
     ws!(
         do_parse!(

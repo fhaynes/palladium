@@ -4,7 +4,7 @@ use nom::types::CompleteStr;
 use tokens::Token;
 use term_parsers::term;
 use operator_parsers::operator;
-
+use function_parsers::function;
 /// Parses a complete expression
 /// 
 /// # Expressions
@@ -12,7 +12,10 @@ use operator_parsers::operator;
 /// An expression consists of a `Term` and an `Operator` and `Term` on the right side.
 named!(pub expression<CompleteStr, Token>,
     do_parse!(
-        left: term >>
+        left: alt!(
+            function |
+            term 
+        ) >>
         right: many0!(
             tuple!(
                 alt!(

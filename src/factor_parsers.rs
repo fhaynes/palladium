@@ -77,6 +77,7 @@ named!(integer<CompleteStr, Token>,
 named!(identifier<CompleteStr, Token>,
     ws!(
         do_parse!(
+            is_not!("def") >>
             id: alpha >>
             (
                 {
