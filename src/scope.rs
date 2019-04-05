@@ -4,19 +4,49 @@
 use std::collections::HashMap;
 
 pub struct Scope {
-    variables: HashMap<String, String>
+    variables: HashMap<String, u8>,
+    return_registers: Vec<u8>
 }
 
 impl Scope {
     /// Creates and returns a new Scope
     pub fn new() -> Scope {
         Scope {
-            variables: HashMap::new()
+            variables: HashMap::new(),
+            return_registers: vec![]
         }
     }
 
     /// Checks if a Scope has a specific variable
     pub fn has_variable(&self, variable: &str) -> bool {
         self.variables.contains_key(variable)
+    }
+
+    pub fn new_variable(&mut self, identifier: &str, register: u8) {
+        self.variables.insert(identifier.to_owned(), register);
+    }
+
+    pub fn get_variable(&self, variable: &str) -> Option<u8> {
+        if let Some(register) = self.variables.get(variable) {
+            return Some(register.to_owned());
+        }
+        None
+    }
+
+    /// Gets all the registers used in this scope
+    pub fn get_registers(&self) -> Vec<u8> {
+        let mut variables = vec![];
+        for register in self.variables.values() {
+            variables.push(register.to_owned());
+        }
+        variables
+    }
+
+    pub fn add_return_register(&mut self, register: u8) {
+        self.return_registers.push(register)
+    }
+
+    pub fn pop_return_register(&mut self) -> Option<u8> {
+        self.return_registers.pop()
     }
 }

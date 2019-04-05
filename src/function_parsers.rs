@@ -9,6 +9,7 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 use expression_parsers::expression;
+use factor_parsers::identifier;
 
 /// Function to extract a function name. A function name is comprised of:
 /// `def` `a-zA-Z0-9`
@@ -62,6 +63,19 @@ named!(pub function_args<CompleteStr, Token>,
     )
 );
 
+named!(pub return_args<CompleteStr, Token>,
+    ws!(
+        do_parse!(
+            args: many0!(function_arg) >>
+            (
+                {
+                    Token::FunctionArgs{ args: args }
+                }
+            )
+        )
+    )
+);
+
 /// Extracts all the expressions that make up a function body
 named!(pub function_body<CompleteStr, Token>,
     ws!(
@@ -84,8 +98,40 @@ named!(pub function<CompleteStr, Token>,
             fname: function_name >>
             args: function_args >>
             body: function_body >>
+            return_statement: return_statement >>
             (
-                Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body) }
+                Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: Box::new(return_statement) }
+            )
+        )
+    )
+);
+
+named!(pub function_call<CompleteStr, Token>,
+    ws!(
+        do_parse!(
+            name: identifier >>
+            parameters: function_args >>
+            (
+                {
+                    Token::FunctionCall{
+                        name: Box::new(name),
+                        parameters: Box::new(parameters)
+                    }
+                }
+            )
+        )
+    )
+);
+
+named!(pub return_statement<CompleteStr, Token>,
+    ws!(
+        do_parse!(
+            tag!("return") >>
+            args: ws!(return_args) >>
+            (
+                {
+                    Token::ReturnStatement{ parameters: Box::new(args) }
+                }
             )
         )
     )
@@ -124,6 +170,17 @@ def test(arg1, arg2):
 "#
 );
         let result = function(test_function);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_function_call() {
+        let test_function = CompleteStr(
+r#"
+test(arg1, arg2)
+"#
+);
+        let result = function_call(test_function);
         assert!(result.is_ok());
     }
 }

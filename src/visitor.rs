@@ -26,9 +26,9 @@ pub struct Compiler {
     /// An `Assembler` for the Iridium VM, so the `Compiler` can emit bytecode
     /// directly
     assembler: Assembler,
-    variables: HashMap<String, String>,
     scopes: Vec<Scope>,
-    scope_pointer: usize
+    scope_pointer: usize,
+    last_variable: Option<String>
 }
 
 impl Compiler {
@@ -44,13 +44,14 @@ impl Compiler {
             used_registers: vec![],
             assembly: vec![],
             assembler: Assembler::new(),
-            variables: HashMap::new(),
             scopes: vec![Scope::new()],
-            scope_pointer: 0
+            scope_pointer: 0,
+            last_variable: None
         }
     }
 
-    /// Takes a 
+    /// Takes a Vector of Strings that represent the text of a program and compiles
+    /// it into bytecode
     pub fn compile(&mut self) -> Vec<u8> {
         let program = self.assembly.join("\n");
         let bytecode = self.assembler.assemble(&program);
@@ -81,6 +82,34 @@ impl Compiler {
         println!("--------------------");
         for r in &self.free_registers {
             println!("{:#?}", r);
+        }
+    }
+
+    pub fn get_variable(&self, variable: &str) -> Option<u8> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(register) = scope.get_variable(variable) {
+                return Some(register);
+            }
+        }
+        None
+    }
+
+    pub fn new_variable(&mut self, identifier: &str, register: u8) {
+        if let Some(scope) = self.scopes.last_mut() {
+            scope.new_variable(identifier, register);
+            self.last_variable = Some(identifier.to_string());
+        }
+    }
+
+    pub fn new_scope(&mut self) {
+        self.scopes.push(Scope::new());
+        self.scope_pointer += 1;
+    }
+
+    pub fn remove_scope(&mut self) {
+        if let Some(newest_scope) = self.scopes.pop() {
+            self.free_registers.extend(newest_scope.get_registers());
+            self.scope_pointer -= 1;
         }
     }
 }
@@ -211,12 +240,14 @@ impl Visitor for Compiler {
                 self.free_registers.push(right_register);
             },
             &Token::Assignment => {
-                let right_register = self.used_registers.pop().unwrap();
-                let variable_register = self.used_registers.pop().unwrap();
-                let line = format!("LOAD ${} ${}", right_register, variable_register);
-                self.assembly.push(line);
-                self.used_registers.push(variable_register);
-                self.free_registers.push(right_register);
+                if let Some(ref identifier) = self.last_variable {
+                    if let Some(variable_register) = self.get_variable(identifier) {
+                        let right_register = self.used_registers.pop().unwrap();
+                        let line = format!("LOAD ${} ${}", right_register, variable_register);
+                        self.assembly.push(line);
+                        self.free_registers.push(right_register);
+                    }
+                }
             },
             &Token::Integer{ value } => {
                 let next_register = self.free_registers.pop().unwrap();
@@ -231,10 +262,8 @@ impl Visitor for Compiler {
                 self.assembly.push(line);
             },
             &Token::Identifier{ ref value } => {
-                let current_scope = &self.scopes[self.scope_pointer];
                 let save_register = self.free_registers.pop().unwrap();
-                self.variables.insert(value.to_string(), save_register.to_string());
-                self.used_registers.push(save_register);
+                self.new_variable(value, save_register);
             },
             &Token::If{ ref expr, ref body} => {
 
@@ -249,8 +278,11 @@ impl Visitor for Compiler {
                 self.visit_token(value);
             },
             &Token::Term{ ref left, ref right } => {
+                println!("Visiting left: {:#?}", left);
                 self.visit_token(left);
                 for factor in right {
+                    println!("Visiting right.1: {:#?}", &factor.1);
+                    println!("Visiting right.0: {:#?}", &factor.0);
                     self.visit_token(&factor.1);
                     self.visit_token(&factor.0);
                 }
@@ -259,14 +291,48 @@ impl Visitor for Compiler {
 
             },
             &Token::FunctionArgs{ ref args } => {
-
+                for arg in args {
+                    let next_register = self.free_registers.pop().unwrap();
+                    self.new_variable(arg, next_register);
+                }
             },
             &Token::FunctionBody{ ref expressions } => {
-
+                for expr in expressions {
+                    self.visit_token(expr);
+                }
             },
-            &Token::Function{ ref name, ref args, ref body } => {
+            &Token::Function{ ref name, ref args, ref body, ref return_statement } => {
+                self.new_scope();
+                self.visit_token(args);
                 let mut line = format!("{}:", Box::new(name));
                 self.assembly.push(line);
+                self.visit_token(&body);
+                self.visit_token(&return_statement);
+                self.assembly.push(format!("RET"));
+            },
+            &Token::FunctionCall{ ref name, ref parameters } => {
+                let mut line = format!("CALL @{}", name);
+                match *parameters.clone() {
+                    Token::FunctionArgs{ args } => {
+                        // Possibly need to do register spilling here
+                    },  
+                    _ => {}
+                }
+            },
+            &Token::ReturnStatement{ ref parameters } => {
+                match *parameters.clone() {
+                    Token::ReturnArgs{ ref args } => {
+                        for arg in args {
+                            let save_register = self.free_registers.pop().unwrap();
+                            let current_scope = &mut self.scopes[self.scope_pointer];
+                            current_scope.add_return_register(save_register);
+                        }
+                    },
+                    _ => {}
+                }
+            },
+            &Token::ReturnArgs{ ref args } => {
+
             },
             &Token::ForLoop{ ref start, ref body } => {
 
@@ -395,6 +461,7 @@ mod tests {
         let mut compiler = Compiler::new();
         let test_program = generate_test_program("x = 4");
         compiler.visit_token(&test_program);
+        println!("{:#?}", compiler.assembly);
         let bytecode = compiler.compile();
     }
 
@@ -403,6 +470,13 @@ mod tests {
         let mut compiler = Compiler::new();
         let test_program = generate_test_program("def testfunc():\n3+4\n");
         compiler.visit_token(&test_program);
-        println!("{:?}", compiler.assembly);
+    }
+
+    #[test]
+    fn test_function_call_assignment() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program("x = testfunc()");
+        compiler.visit_token(&test_program);
+        println!("{:#?}", compiler.assembly);
     }
 }

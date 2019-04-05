@@ -14,7 +14,7 @@ named!(pub expression<CompleteStr, Token>,
     do_parse!(
         left: alt!(
             function |
-            term 
+            term
         ) >>
         right: many0!(
             tuple!(

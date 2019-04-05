@@ -4,6 +4,7 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 use expression_parsers::expression;
+use function_parsers::function_call;
 
 /// Parser for a 64-bit float. A float can be negative, and must contain a `.`.
 /// 
@@ -74,10 +75,10 @@ named!(integer<CompleteStr, Token>,
 /// ````
 /// 
 /// An Identifier can consist only of letters and are case-sensitive.
-named!(identifier<CompleteStr, Token>,
+named!(pub identifier<CompleteStr, Token>,
     ws!(
         do_parse!(
-            is_not!("def") >>
+            not!(reserved) >>
             id: alpha >>
             (
                 {
@@ -88,6 +89,19 @@ named!(identifier<CompleteStr, Token>,
     )
 );
 
+named!(pub reserved<CompleteStr, CompleteStr>,
+    ws!(
+        peek!(
+            alt!(
+                complete!(tag!("def")) |
+                complete!(tag!("if")) |
+                complete!(tag!("elif")) |
+                complete!(tag!("else")) |
+                complete!(tag!("return"))
+            )
+        )
+    )
+);
 /// Parser for a `Factor`. A Factor consists of an integer, float, identifier,
 /// or a parenthized expression
 /// 
@@ -103,6 +117,7 @@ named!(pub factor<CompleteStr, Token>,
             f: alt!(
                 integer |
                 float64 |
+                function_call |
                 identifier |
                 ws!(delimited!( tag_s!("("), expression, tag_s!(")") ))
             ) >>

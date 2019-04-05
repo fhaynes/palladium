@@ -8,5 +8,5 @@ homepage = "https://blog.subnetzero.io"
 repository = "https://gitlab.com/subnetzero/palladium"
 
 [dependencies]
-nom = "^4.0"
+nom = { version = "^4.2", features = ["verbose-errors"] }
 iridium = "0.0.33"
