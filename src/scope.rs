@@ -49,4 +49,8 @@ impl Scope {
     pub fn pop_return_register(&mut self) -> Option<u8> {
         self.return_registers.pop()
     }
+
+    pub fn clone_all_return_registers(&mut self) -> Vec<u8> {
+        self.return_registers.clone()
+    }
 }

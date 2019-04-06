@@ -4,7 +4,9 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 use expression_parsers::expression;
-use function_parsers::function_call;
+use function_parsers::{
+    function_call, return_statement
+};
 
 /// Parser for a 64-bit float. A float can be negative, and must contain a `.`.
 /// 
@@ -79,10 +81,16 @@ named!(pub identifier<CompleteStr, Token>,
     ws!(
         do_parse!(
             not!(reserved) >>
-            id: alpha >>
+            values: many1!(alphanumeric) >>
+            opt!(ws!(tag!(","))) >>
             (
                 {
-                    Token::Factor{ value: Box::new(Token::Identifier{ value: id.to_string() })}
+                    let mut converted_vec = vec![];
+                    for value in values {
+                        converted_vec.push(value.to_string());
+                    }
+                    let identifier = Token::Identifier{ values: converted_vec };
+                    Token::Factor{ value: Box::new(identifier) }
                 }
             )
         )
@@ -118,6 +126,7 @@ named!(pub factor<CompleteStr, Token>,
                 integer |
                 float64 |
                 function_call |
+                return_statement |
                 identifier |
                 ws!(delimited!( tag_s!("("), expression, tag_s!(")") ))
             ) >>

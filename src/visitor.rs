@@ -28,7 +28,7 @@ pub struct Compiler {
     assembler: Assembler,
     scopes: Vec<Scope>,
     scope_pointer: usize,
-    last_variable: Option<String>
+    identifier_buffer: Vec<String>
 }
 
 impl Compiler {
@@ -46,7 +46,7 @@ impl Compiler {
             assembler: Assembler::new(),
             scopes: vec![Scope::new()],
             scope_pointer: 0,
-            last_variable: None
+            identifier_buffer: vec![]
         }
     }
 
@@ -97,8 +97,8 @@ impl Compiler {
     pub fn new_variable(&mut self, identifier: &str, register: u8) {
         if let Some(scope) = self.scopes.last_mut() {
             scope.new_variable(identifier, register);
-            self.last_variable = Some(identifier.to_string());
         }
+
     }
 
     pub fn new_scope(&mut self) {
@@ -111,6 +111,11 @@ impl Compiler {
             self.free_registers.extend(newest_scope.get_registers());
             self.scope_pointer -= 1;
         }
+    }
+
+    pub fn pop_current_scope(&mut self) -> Option<Scope> {
+        self.scope_pointer -= 1;
+        self.scopes.pop()
     }
 }
 
@@ -240,14 +245,7 @@ impl Visitor for Compiler {
                 self.free_registers.push(right_register);
             },
             &Token::Assignment => {
-                if let Some(ref identifier) = self.last_variable {
-                    if let Some(variable_register) = self.get_variable(identifier) {
-                        let right_register = self.used_registers.pop().unwrap();
-                        let line = format!("LOAD ${} ${}", right_register, variable_register);
-                        self.assembly.push(line);
-                        self.free_registers.push(right_register);
-                    }
-                }
+
             },
             &Token::Integer{ value } => {
                 let next_register = self.free_registers.pop().unwrap();
@@ -261,9 +259,10 @@ impl Visitor for Compiler {
                 self.used_registers.push(next_register);
                 self.assembly.push(line);
             },
-            &Token::Identifier{ ref value } => {
-                let save_register = self.free_registers.pop().unwrap();
-                self.new_variable(value, save_register);
+            &Token::Identifier{ ref values } => {
+                for value in values {
+                    self.identifier_buffer.push(value.to_string());
+                }
             },
             &Token::If{ ref expr, ref body} => {
 
@@ -278,13 +277,28 @@ impl Visitor for Compiler {
                 self.visit_token(value);
             },
             &Token::Term{ ref left, ref right } => {
-                println!("Visiting left: {:#?}", left);
-                self.visit_token(left);
-                for factor in right {
-                    println!("Visiting right.1: {:#?}", &factor.1);
-                    println!("Visiting right.0: {:#?}", &factor.0);
-                    self.visit_token(&factor.1);
-                    self.visit_token(&factor.0);
+                // If we are doing a variable assignment, we need to handle it a bit differently
+                println!("Visiting term: {} {:#?}", left, right);
+                if right.len() > 0 {
+                    if right[0].1 == Token::Assignment {
+                        self.visit_token(left);
+                        self.visit_token(&right[0].0);
+                        let mut current_scope = self.pop_current_scope().unwrap();
+                        for register in current_scope.clone_all_return_registers() {
+                            let identifier = self.identifier_buffer.pop().unwrap();
+                            println!("Placing {} in {}", identifier, register);
+                            self.new_variable(&identifier, register);
+                        }
+                    }
+                } else {
+                    println!("Visiting left: {:#?}", left);
+                    self.visit_token(left);
+                    for factor in right {
+                        println!("Visiting right.1: {:#?}", &factor.1);
+                        println!("Visiting right.0: {:#?}", &factor.0);
+                        self.visit_token(&factor.1);
+                        self.visit_token(&factor.0);
+                    }
                 }
             },
             &Token::FunctionName{ ref name } => {
@@ -307,7 +321,12 @@ impl Visitor for Compiler {
                 let mut line = format!("{}:", Box::new(name));
                 self.assembly.push(line);
                 self.visit_token(&body);
-                self.visit_token(&return_statement);
+                match return_statement {
+                    Some(r) => {
+                        println!("Return is: {:#?}", r);
+                    },
+                    None => {}
+                }
                 self.assembly.push(format!("RET"));
             },
             &Token::FunctionCall{ ref name, ref parameters } => {
@@ -318,6 +337,7 @@ impl Visitor for Compiler {
                     },  
                     _ => {}
                 }
+                self.assembly.push(line);
             },
             &Token::ReturnStatement{ ref parameters } => {
                 match *parameters.clone() {
@@ -353,6 +373,7 @@ impl Visitor for Compiler {
 
             },
             &Token::Expression{ ref left, ref right } => {
+                println!("Expression: {:#?} {:#?}", left, right);
                 self.visit_token(left);
                 for term in right {
                     self.visit_token(&term.1);
@@ -476,6 +497,21 @@ mod tests {
     fn test_function_call_assignment() {
         let mut compiler = Compiler::new();
         let test_program = generate_test_program("x = testfunc()");
+        compiler.visit_token(&test_program);
+        println!("{:#?}", compiler.assembly);
+    }
+
+    #[test]
+    fn test_function_return_values() {
+        let mut compiler = Compiler::new();
+        let test_program = generate_test_program(
+r#"
+def test():
+    return 1, 2
+
+x, y = test()
+"#
+        );
         compiler.visit_token(&test_program);
         println!("{:#?}", compiler.assembly);
     }

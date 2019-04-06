@@ -107,7 +107,6 @@ mod tests {
     #[test]
     fn test_parse_if_start() {
         let result = if_block_start(CompleteStr("if x > 3:\n1+2"));
-        println!("{:#?}", result);
         assert!(result.is_ok());
         let result = if_block_start(CompleteStr("if x > 3:\n3+2"));
         assert!(result.is_ok());

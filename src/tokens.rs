@@ -17,7 +17,7 @@ pub enum Token {
     Assignment,
     Integer { value: i64 },
     Float { value: f64},
-    Identifier { value: String },
+    Identifier { values: Vec<String> },
     Factor { value: Box<Token> },
     Term { left: Box<Token>, right: Vec<(Token, Token)> },
     If { expr: Box<Token>, body: Vec<Token> },
@@ -27,7 +27,7 @@ pub enum Token {
     FunctionName { name: String },
     FunctionArgs { args: Vec<String> },
     FunctionBody { expressions: Vec<Token> },
-    Function { name: Box<Token>, args: Box<Token>, body: Box<Token>, return_statement: Box<Token> },
+    Function { name: Box<Token>, args: Box<Token>, body: Box<Token>, return_statement: Option<Box<Token>> },
     ReturnArgs { args: Vec<Token> },
     ReturnStatement { parameters: Box<Token> },
     WhileLoop { start: Box<Token>, body: Box<Token> },
@@ -49,8 +49,8 @@ impl fmt::Display for Token {
             Token::Assignment => {
                 write!(f, "Assignment")
             },
-            Token::Identifier{ value } => {
-                write!(f, "{}", value)
+            Token::Identifier{ values } => {
+                write!(f, "{:#?}", values)
             },
             Token::Integer{ value } => {
                 write!(f, "{}", value)
@@ -65,7 +65,7 @@ impl fmt::Display for Token {
                 write!(f, "Term")
             },
             Token::Factor{ value } => {
-                write!(f, "Factor")
+                write!(f, "{}", value)
             },
             _ => {
                 write!(f, "unknown")

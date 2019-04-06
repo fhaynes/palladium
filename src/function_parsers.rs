@@ -17,7 +17,6 @@ named!(pub function_name<CompleteStr, Token>,
     ws!(
         do_parse!(
             ws!(tag!("def")) >>
-            many0!(tag!(" ")) >>
             func_name: take_until!("(") >>
             ( 
                 {
@@ -34,9 +33,7 @@ named!(function_arg<CompleteStr, String>,
     ws!(
         do_parse!(
             // Any alphanumeric counts as a valid character in a function
-            arg: ws!(alphanumeric) >>
-            // If there is more than one arg, we optionally consume the separating `,`
-            opt!(ws!(tag!(","))) >>
+            arg: ws!(identifier) >>
             (
                 {
                     arg.to_string()
@@ -81,8 +78,7 @@ named!(pub function_body<CompleteStr, Token>,
     ws!(
         do_parse!(
             // This signals the beginning of the body
-            tag!(":") >>
-            expressions: many0!(expression) >>
+            expressions: many1!(expression) >>
             (
                 Token::FunctionBody{ expressions: expressions }
             )
@@ -97,10 +93,16 @@ named!(pub function<CompleteStr, Token>,
         do_parse!(
             fname: function_name >>
             args: function_args >>
+            ws!(tag!(":")) >>
             body: function_body >>
-            return_statement: return_statement >>
+            return_statement: opt!(return_statement) >>
             (
-                Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: Box::new(return_statement) }
+                if return_statement.is_some() {
+                    Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: Some(Box::new(return_statement.unwrap())) }    
+                } else {
+                    Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: None }    
+                }
+                
             )
         )
     )
@@ -166,7 +168,7 @@ mod tests {
 r#"
 def test(arg1, arg2):
     3+1
-
+    return 0
 "#
 );
         let result = function(test_function);
@@ -181,6 +183,7 @@ test(arg1, arg2)
 "#
 );
         let result = function_call(test_function);
+        println!("{:#?}", result);
         assert!(result.is_ok());
     }
 }
