@@ -2,6 +2,7 @@ use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
+    Eof,
     AdditionOperator,
     SubtractionOperator,
     MultiplicationOperator,
@@ -23,11 +24,11 @@ pub enum Token {
     If { expr: Box<Token>, body: Vec<Token> },
     Elif { expr: Box<Token>, body: Vec<Token> },
     Else { body: Vec<Token> },
-    FunctionCall { name: Box<Token>, parameters: Box<Token> },
+    FunctionCall { name: String, parameters: Box<Token> },
     FunctionName { name: String },
     FunctionArgs { args: Vec<String> },
     FunctionBody { expressions: Vec<Token> },
-    Function { name: Box<Token>, args: Box<Token>, body: Box<Token>, return_statement: Option<Box<Token>> },
+    Function { name: Box<Token>, args: Box<Token>, body: Box<Token>, return_statement: Box<Token> },
     ReturnArgs { args: Vec<Token> },
     ReturnStatement { parameters: Box<Token> },
     WhileLoop { start: Box<Token>, body: Box<Token> },

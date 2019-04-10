@@ -4,8 +4,10 @@
 use std::collections::HashMap;
 
 pub struct Scope {
-    variables: HashMap<String, u8>,
-    return_registers: Vec<u8>
+    pub variables: HashMap<String, u8>,
+    return_registers: Vec<u8>,
+    pub used_registers: Vec<u8>,
+    bp_offset: i32,
 }
 
 impl Scope {
@@ -13,7 +15,9 @@ impl Scope {
     pub fn new() -> Scope {
         Scope {
             variables: HashMap::new(),
-            return_registers: vec![]
+            return_registers: vec![],
+            used_registers: vec![],
+            bp_offset: 0,
         }
     }
 

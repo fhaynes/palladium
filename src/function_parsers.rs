@@ -9,7 +9,7 @@ use nom::types::CompleteStr;
 
 use tokens::Token;
 use expression_parsers::expression;
-use factor_parsers::identifier;
+use factor_parsers::{identifiers, identifier, factor};
 
 /// Function to extract a function name. A function name is comprised of:
 /// `def` `a-zA-Z0-9`
@@ -60,27 +60,15 @@ named!(pub function_args<CompleteStr, Token>,
     )
 );
 
-named!(pub return_args<CompleteStr, Token>,
-    ws!(
-        do_parse!(
-            args: many0!(function_arg) >>
-            (
-                {
-                    Token::FunctionArgs{ args: args }
-                }
-            )
-        )
-    )
-);
-
 /// Extracts all the expressions that make up a function body
 named!(pub function_body<CompleteStr, Token>,
     ws!(
         do_parse!(
-            // This signals the beginning of the body
-            expressions: many1!(expression) >>
+            expressions: many0!(expression) >>
             (
-                Token::FunctionBody{ expressions: expressions }
+                {
+                    Token::FunctionBody{ expressions: expressions }
+                }
             )
         )
     )
@@ -95,14 +83,11 @@ named!(pub function<CompleteStr, Token>,
             args: function_args >>
             ws!(tag!(":")) >>
             body: function_body >>
-            return_statement: opt!(return_statement) >>
+            rs: return_statement >>
             (
-                if return_statement.is_some() {
-                    Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: Some(Box::new(return_statement.unwrap())) }    
-                } else {
-                    Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: None }    
+                {
+                    Token::Function{ name: Box::new(fname), args: Box::new(args), body: Box::new(body), return_statement: Box::new(rs) }
                 }
-                
             )
         )
     )
@@ -116,9 +101,37 @@ named!(pub function_call<CompleteStr, Token>,
             (
                 {
                     Token::FunctionCall{
-                        name: Box::new(name),
+                        name: name,
                         parameters: Box::new(parameters)
                     }
+                }
+            )
+        )
+    )
+);
+
+named!(pub return_arg<CompleteStr, Token>,
+    ws!(
+        do_parse!(
+            f: factor >>
+            opt!(ws!(tag!(","))) >>
+            (
+                {
+                    Token::Factor{ value: Box::new(f) }
+                }
+            )
+        )
+    )
+);
+
+named!(pub return_args<CompleteStr, Token>,
+    ws!(
+        do_parse!(
+            args: many0!(return_arg) >>
+            ws!(tag!(";")) >>
+            (
+                {
+                    Token::ReturnArgs{ args: args }
                 }
             )
         )
@@ -129,10 +142,12 @@ named!(pub return_statement<CompleteStr, Token>,
     ws!(
         do_parse!(
             tag!("return") >>
-            args: ws!(return_args) >>
+            arg: return_arg >>
+            ws!(tag!(";")) >>
+            
             (
                 {
-                    Token::ReturnStatement{ parameters: Box::new(args) }
+                    Token::ReturnStatement{ parameters: Box::new(arg) }
                 }
             )
         )
@@ -163,14 +178,8 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_function() {
-        let test_function = CompleteStr(
-r#"
-def test(arg1, arg2):
-    3+1
-    return 0
-"#
-);
+    fn test_parse_function_def() {
+        let test_function = CompleteStr("def test(arg1, arg2):\n\t1+2\n\treturn 0;\n");
         let result = function(test_function);
         assert!(result.is_ok());
     }
@@ -183,7 +192,6 @@ test(arg1, arg2)
 "#
 );
         let result = function_call(test_function);
-        println!("{:#?}", result);
         assert!(result.is_ok());
     }
 }

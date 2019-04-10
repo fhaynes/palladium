@@ -77,12 +77,10 @@ named!(integer<CompleteStr, Token>,
 /// ````
 /// 
 /// An Identifier can consist only of letters and are case-sensitive.
-named!(pub identifier<CompleteStr, Token>,
+named!(pub identifiers<CompleteStr, Token>,
     ws!(
         do_parse!(
-            not!(reserved) >>
-            values: many1!(alphanumeric) >>
-            opt!(ws!(tag!(","))) >>
+            values: many1!(identifier) >>
             (
                 {
                     let mut converted_vec = vec![];
@@ -97,6 +95,31 @@ named!(pub identifier<CompleteStr, Token>,
     )
 );
 
+named!(pub identifier<CompleteStr, String>,
+    ws!(
+        do_parse!(
+            not!(reserved) >>
+            value: ws!(alphanumeric) >>
+            opt!(ws!(tag!(","))) >>
+            (
+                {
+                    value.to_string()
+                }
+            )
+        )
+    )
+);
+
+named!(pub end_of_file<CompleteStr, Token>, 
+    ws!(
+        do_parse!(
+            eof!() >>
+            (
+                Token::Eof
+            )
+        )
+    )
+);
 named!(pub reserved<CompleteStr, CompleteStr>,
     ws!(
         peek!(
@@ -126,8 +149,7 @@ named!(pub factor<CompleteStr, Token>,
                 integer |
                 float64 |
                 function_call |
-                return_statement |
-                identifier |
+                identifiers |
                 ws!(delimited!( tag_s!("("), expression, tag_s!(")") ))
             ) >>
             (
