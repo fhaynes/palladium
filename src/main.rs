@@ -14,6 +14,7 @@ mod function_parsers;
 mod loop_parsers;
 mod conditional_parsers;
 mod scope;
+mod list_parsers;
 fn main() {
     
 }

@@ -378,6 +378,12 @@ impl Visitor for Compiler {
             &Token::Eof => {
 
             },
+            &Token::ListInterior{ ref body } => {
+
+            },
+            &Token::List { ref elements } => {
+
+            },
             &Token::Expression{ ref left, ref right } => {
                 self.visit_token(left);
                 for term in right {

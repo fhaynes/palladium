@@ -24,6 +24,8 @@ pub enum Token {
     If { expr: Box<Token>, body: Vec<Token> },
     Elif { expr: Box<Token>, body: Vec<Token> },
     Else { body: Vec<Token> },
+    List { elements: Vec<Token> },
+    ListInterior{ body: String },
     FunctionCall { name: String, parameters: Box<Token> },
     FunctionName { name: String },
     FunctionArgs { args: Vec<String> },

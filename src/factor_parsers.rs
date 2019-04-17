@@ -16,7 +16,7 @@ use function_parsers::{
 /// x = 4.5
 /// y = -4.5
 /// ```
-named!(float64<CompleteStr, Token>,
+named!(pub float64<CompleteStr, Token>,
     ws!(
         do_parse!(
             sign: opt!(tag!("-")) >>
@@ -48,7 +48,7 @@ named!(float64<CompleteStr, Token>,
 /// x = 4
 /// y = -4
 /// ```
-named!(integer<CompleteStr, Token>,
+named!(pub integer<CompleteStr, Token>,
     ws!(
         do_parse!(
             sign: opt!(tag!("-")) >>
@@ -152,6 +152,7 @@ named!(pub factor<CompleteStr, Token>,
                 identifiers |
                 ws!(delimited!( tag_s!("("), expression, tag_s!(")") ))
             ) >>
+
             (
                 {
                     Token::Factor{value: Box::new(f)}
