@@ -384,6 +384,12 @@ impl Visitor for Compiler {
             &Token::List { ref elements } => {
 
             },
+            &Token::Dictionary { ref keys, ref values } => {
+
+            },
+            &Token::DictionaryKeyValuePair { ref key, ref value } => {
+
+            },
             &Token::Expression{ ref left, ref right } => {
                 self.visit_token(left);
                 for term in right {

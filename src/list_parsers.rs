@@ -74,7 +74,6 @@ mod tests {
     #[test]
     fn test_parse_list_with_expression() {
         let result = list(CompleteStr("[1, a, 1+2]"));
-        println!("Result is: {:#?}", result);
         assert!(result.is_ok());
     }
 }

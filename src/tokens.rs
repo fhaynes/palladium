@@ -26,6 +26,8 @@ pub enum Token {
     Else { body: Vec<Token> },
     List { elements: Vec<Token> },
     ListInterior{ body: String },
+    Dictionary{ keys: Vec<Token>, values: Vec<Token> },
+    DictionaryKeyValuePair{ key: Box<Token>, value: Box<Token> },
     FunctionCall { name: String, parameters: Box<Token> },
     FunctionName { name: String },
     FunctionArgs { args: Vec<String> },
